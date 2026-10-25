@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Hisob-Kitob Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: var(--tg-theme-bg-color, #f4f5f7);
+      --text: var(--tg-theme-text-color, #1c1c1e);
+      --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+      --btn: var(--tg-theme-button-color, #007aff);
+      --btn-text: var(--tg-theme-button-text-color, #ffffff);
+      --hint: var(--tg-theme-hint-color, #8e8e93);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    h2, h3 { margin: 0 0 10px 0; }
+    .balance-box {
+      text-align: center;
+      padding: 14px;
+    }
+    .balance-amount {
+      font-size: 26px;
+      font-weight: 700;
+      color: #34c759;
+    }
+    .balance-amount.negative {
+      color: #ff3b30;
+    }
+    label {
+      font-size: 13px;
+      color: var(--hint);
+      display: block;
+      margin-bottom: 4px;
+    }
+    input, select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid #d1d1d6;
+      border-radius: 8px;
+      font-size: 15px;
+      margin-bottom: 10px;
+      background: var(--card-bg);
+      color: var(--text);
+      outline: none;
+    }
+    .btn {
+      width: 100%;
+      background: var(--btn);
+      color: var(--btn-text);
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #e5e5ea;
+      font-size: 14px;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .income { color: #34c759; font-weight: 600; }
+    .expense { color: #ff3b30; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <div class="card balance-box">
+    <label>Joriy balans</label>
+    <div id="totalBalance" class="balance-amount">0 so'm</div>
+  </div>
+
+  <div class="card">
+    <h3>Yangi hisob qo'shish</h3>
+    <label>Tavsif (nomi)</label>
+    <input type="text" id="desc" placeholder="Masalan: Ish haqi, Tushlik">
+
+    <label>Summa</label>
+    <input type="number" id="amount" placeholder="0">
+
+    <label>Turi</label>
+    <select id="type">
+      <option value="in">Kirim (Daromad)</option>
+      <option value="out">Chiqim (Xarajat)</option>
+    </select>
+
+    <button class="btn" onclick="addItem()">Qo'shish</button>
+  </div>
+
+  <div class="card">
+    <h3>Tarix</h3>
+    <div id="historyList">
+      <p style="color: var(--hint); text-align: center; margin: 10px 0;">Hozircha hisoblar yo'q</p>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    let balance = 0;
+    let records = [];
+
+    tg.MainButton.text = "Hisobotni botga yuborish";
+    tg.MainButton.onClick(() => {
+      if (records.length === 0) {
+        tg.showAlert("Hech qanday hisob-kitob kiritilmagan!");
+        return;
+      }
+      const dataToSend = {
+        total: balance,
+        itemsCount: records.length,
+        items: records
+      };
+      tg.sendData(JSON.stringify(dataToSend));
+    });
+
+    function addItem() {
+      const descInput = document.getElementById('desc');
+      const amountInput = document.getElementById('amount');
+      const typeSelect = document.getElementById('type');
+
+      const desc = descInput.value.trim();
+      const amount = parseFloat(amountInput.value);
+      const type = typeSelect.value;
+
+      if (!desc || isNaN(amount) || amount <= 0) {
+        tg.showAlert("Iltimos, nom va to'g'ri summani kiriting!");
+        return;
+      }
+
+      const signedAmount = type === 'in' ? amount : -amount;
+      balance += signedAmount;
+      records.push({ desc, amount: signedAmount, date: new Date().toLocaleTimeString() });
+
+      updateUI();
+
+      descInput.value = '';
+      amountInput.value = '';
+
+      if (records.length > 0) {
+        tg.MainButton.show();
+      }
+    }
+
+    function updateUI() {
+      const balanceEl = document.getElementById('totalBalance');
+      balanceEl.textContent = balance.toLocaleString() + " so'm";
+      balanceEl.className = 'balance-amount ' + (balance >= 0 ? '' : 'negative');
+
+      const listEl = document.getElementById('historyList');
+      listEl.innerHTML = '';
+
+      records.slice().reverse().forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        const isIncome = item.amount > 0;
+        div.innerHTML = `
+          <span>${item.desc}</span>
+          <span class="${isIncome ? 'income' : 'expense'}">${isIncome ? '+' : ''}${item.amount.toLocaleString()}</span>
+        `;
+        listEl.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
