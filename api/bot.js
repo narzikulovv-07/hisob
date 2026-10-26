@@ -30,13 +30,14 @@ module.exports = async (req, res) => {
                 "📞 Aloqa uchun telefonlar:\n+998 97 910 90 07\n+998 97 599 44 49\n\n" +
                 "💬 Telegram: @TexnoZarFix";
   } else if (userText.includes('manzil') || userText.includes('qayerda') || userText.includes('lokatsiya')) {
-    replyText = "📍 Bizning manzil: Urgut shahri, TexnoZarFix ustaxonasi.";
+    replyText = "📍 Bizning manzil: Urgut shahri,Urgut dexqon bozori TexnoZarFix ustaxonasi.";
   } else if (userText.includes('vaqt') || userText.includes('ish vaqti') || userText.includes('ochiq')) {
     replyText = "⏰ Ish vaqtimiz: Har kuni soat 09:00 dan 19:00 gacha.";
   } else if (userText.includes('telefon') || userText.includes('aloqa') || userText.includes('nomer') || userText.includes('telegram')) {
-    replyText = "📞 Aloqa uchun telefon raqamlarimiz:\n+998 97 910 90 07\n+998 97 599 44 49\n\n💬 Telegram: @TexnoZarFix";
+    replyText = "📞 Aloqa uchun telefon raqamlarimiz:\n+998 97 910 90 07\n+998 97 599 44 49\n\n💬 Telegram: @TexnoZarFix" ;
+  } else if (userText.includes('ishonchlimi') || userText.includes('qanaqa boladi') || userText.includes('yaxxshimi') || userText.includes('telegram')) {
+    replyText = "bida hammasi e'tibor bilan amalga oshiriladi yolg'on gap bilan emas\n\n💬bajarolmagan ishimiga haqolmaymiz ;
   }
-
   try {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: 'POST',
