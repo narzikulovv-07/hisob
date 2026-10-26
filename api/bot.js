@@ -26,9 +26,9 @@ module.exports = async (req, res) => {
 
   const instaUrl = "https://www.instagram.com/texnozarfix?mdxt=N2Y1MGRyZjkzdDZs";
 
-  // 1. Standart tugmalar
+  // 1. Asosiy buyruqlar va menyular
   if (lowerText === '/start') {
-    await sendTg(BOT_TOKEN, chatId, "Assalomu alaykum! TexnoZarFix professional elektronika va smartfon ta'mirlash markazining aqlli botiga xush kelibsiz.\n\nMenyudagi tugmalardan foydalanishingiz yoki telefoningizdagi nosozlikni yozib qoldirishingiz mumkin. Sun'iy intellekt yordamchimiz sizga darhol javob beradi!", keyboard);
+    await sendTg(BOT_TOKEN, chatId, "Assalomu alaykum! TexnoZarFix ustaxonasining aqlli botiga xush kelibsiz.\n\nMenyudagi tugmalardan foydalanishingiz yoki telefoningizdagi muammoni shunchaki yozib qoldirishingiz mumkin. Sun'iy intellekt sizga darhol javob beradi!", keyboard);
     return res.status(200).send('OK');
   }
 
@@ -38,7 +38,7 @@ module.exports = async (req, res) => {
   }
 
   if (lowerText.includes('manzil') || lowerText.includes('qayerda') || lowerText.includes('lokatsiya')) {
-    await sendTg(BOT_TOKEN, chatId, "📍 Bizning manzil: Urgut shahri, TexnoZarFix ustaxonasi.\n\nMo'ljal yoki to'liq lokatsiya olish uchun operator bilan bog'laning: +998 97 910 90 07", keyboard);
+    await sendTg(BOT_TOKEN, chatId, "📍 Manzilimiz: Urgut shahri, TexnoZarFix ustaxonasi.\n\nMo'ljal yoki to'liq lokatsiya olish uchun: +998 97 910 90 07", keyboard);
     return res.status(200).send('OK');
   }
 
@@ -48,43 +48,37 @@ module.exports = async (req, res) => {
   }
 
   if (lowerText.includes('telefon') || lowerText.includes('aloqa') || lowerText.includes('nomer') || lowerText.includes("bog'lanish")) {
-    await sendTg(BOT_TOKEN, chatId, `📞 Aloqa uchun telefon raqamlarimiz:\n+998 97 910 90 07\n+998 97 599 44 49\n\n💬 Telegram: @TexnoZarFix\n📸 Instagram: ${instaUrl}`, keyboard);
+    await sendTg(BOT_TOKEN, chatId, `📞 Aloqa uchun:\n+998 97 910 90 07\n+998 97 599 44 49\n\n💬 Telegram: @TexnoZarFix\n📸 Instagram: ${instaUrl}`, keyboard);
     return res.status(200).send('OK');
   }
 
-  // 2. Mijozdan erkin xabar kelsa: BIRINCHI NAVBATDA SIZGA (USTAGA) BILDIRISHNOMA YUBORAMIZ
+  // 2. Sizga (Adminga) xabarni yetkazish
   const senderName = message.from?.first_name || 'Mijoz';
   const senderUser = message.from?.username ? `@${message.from.username}` : "Username yo'q";
-  const alertToAdmin = `📩 Yangi mijoz murojaati!\n\n👤 Ismi: ${senderName}\n🔗 Profili: ${senderUser}\n🆔 Chat ID: ${chatId}\n\n💬 Xabari:\n"${userText}"`;
+  const alertToAdmin = `📩 Yangi mijoz murojaati!\n\n👤 Ismi: ${senderName}\n🔗 Profili: ${senderUser}\n🆔 ID: ${chatId}\n\n💬 Xabari:\n"${userText}"`;
 
   try {
     await sendTg(BOT_TOKEN, ADMIN_CHAT_ID, alertToAdmin);
-  } catch (err) {
-    console.error("Adminga xabar ketmadi:", err);
-  }
+  } catch (err) {}
 
-  // 3. Endi Gemini AI mijozga javob tayyorlaydi
+  // 3. Gemini AI orqali mijozga o'zi mustaqil javob qaytarish
   let replyText = "";
-  const systemPrompt = `Siz "TexnoZarFix" professional smartfon va elektronika ta'mirlash servis markazining rasmiy aqlli virtual maslahatchisisiz.
-Ustaxona joylashuvi: Urgut shahri.
-Telefonlar: +998 97 910 90 07, +998 97 599 44 49.
-Telegram: @TexnoZarFix.
-Instagram: ${instaUrl}.
-
+  const systemInstruction = `Siz "TexnoZarFix" professional smartfon va elektronika ta'mirlash markazining aqlli konsultantisiz. Joylashuv: Urgut shahri. Aloqa: +998 97 910 90 07.
+Vazifangiz: Mijozga o'zbek tilida, muloyim va aniq usta sifatida maslahat bering.
 Qoidalar:
-1. O'zbek tilida muloyim, aniq va usta tilida professional javob bering.
-2. Boshlang'ich narxlar: Ekran almashtirish 50 000 so'mdan, Batareya 40 000 so'mdan, Plata/tutashuv 100 000 so'mdan, BGA/Mikrosxema 150 000 - 350 000 so'm atrofida. Aniq narx apparatni mikroskop ostida diagnostika qilib aytiladi.
-3. 2-3 ta qisqa gapda tushuntiring va ustaxonaga taklif qiling.`;
+- Telefon nosozligi (ekran, zaryad, batareya, qisqa tutashuv, plata, chip) bo'yicha sababini tushuntiring.
+- Taxminiy narxlar: Ekran almashtirish 50 000 so'mdan, batareya 40 000 so'mdan, plata va tutashuvlar 100 000 so'mdan boshlanadi. Aniq narx mikroskop ostida diagnostika qilingach aytiladi.
+- Javob 2-3 ta ixcham gapdan iborat bo'lsin va oxirida servisga olib kelishni taklif qiling.`;
 
   try {
-    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [
           {
             role: "user",
-            parts: [{ text: `${systemPrompt}\n\nMijoz savoli: "${userText}"` }]
+            parts: [{ text: `${systemInstruction}\n\nMijoz savoli: "${userText}"` }]
           }
         ]
       })
@@ -97,7 +91,7 @@ Qoidalar:
       replyText = "Xabaringiz qabul qilindi. Tez orada usta siz bilan bog'lanadi.\n📞 +998 97 910 90 07";
     }
   } catch (err) {
-    replyText = "Xabaringiz usta yetkazildi. Tez orada siz bilan bog'lanamiz!\n📞 +998 97 910 90 07";
+    replyText = "Xabaringiz qabul qilindi. Ustaxonamizga olib kelsangiz, bepul diagnostika qilib beramiz.\n📞 +998 97 910 90 07";
   }
 
   // 4. Mijozga AI javobini yuborish
@@ -106,7 +100,6 @@ Qoidalar:
   return res.status(200).send('OK');
 };
 
-// Telegramga xabar yuboruvchi yordamchi funksiya
 async function sendTg(token, chatId, text, keyboard = null) {
   const body = { chat_id: chatId, text };
   if (keyboard) body.reply_markup = keyboard;
@@ -116,3 +109,4 @@ async function sendTg(token, chatId, text, keyboard = null) {
     body: JSON.stringify(body)
   });
 }
+    
