@@ -9,8 +9,11 @@ module.exports = async (req, res) => {
   }
 
   const BOT_TOKEN = '8959753899:AAHSvO2UDi8bCtTCnMPV1Gle_Y6zZa39DIA';
+  const GEMINI_API_KEY = 'AQ.Ab8RN6KIL0eX52J70wG7z6Da0MCor0gCg_00PgbC8mhXA0ds6w';
+  const ADMIN_CHAT_ID = '1551435907';
   const chatId = message.chat.id;
-  const userText = message.text.toLowerCase().trim();
+  const userText = message.text.trim();
+  const lowerText = userText.toLowerCase();
 
   // Asosiy tugmalar (Klaviatura menyusi)
   const keyboard = {
@@ -24,67 +27,84 @@ module.exports = async (req, res) => {
 
   const instaUrl = "https://www.instagram.com/texnozarfix?mdxt=N2Y1MGRyZjkzdDZs";
 
-  let replyText = "Kechirasiz, sizni to'liq tushunmadim. Menyudagi tugmalardan foydalanishingiz yoki savolingizni yozishingiz mumkin.";
+  let replyText = "";
 
-  if (userText === '/start') {
-    replyText = "Assalomu alaykum! TexnoZarFix professional elektronika va smartfon ta'mirlash markazining rasmiy botiga xush kelibsiz.\n\nKerakli ma'lumotni olish uchun quyidagi tugmalardan birini tanlang:";
-  } else if (userText.includes('salom') || userText.includes('assalom')) {
-    replyText = "Assalomu alaykum! TexnoZarFix ustaxonasiga xush kelibsiz. Qanday xizmat kerak?";
-  } else if (
-    userText.includes('narx') || 
-    userText.includes('qancha') || 
-    userText.includes('summa') || 
-    userText.includes('pul') || 
-    userText.includes('xizmatlar')
-  ) {
-    replyText = "🛠 TexnoZarFix xizmatlarining boshlang'ich narxlari:\n\n" +
-                "1. Ekran / Modul almashtirish: 50 000 so'mdan boshlab (zapchast alohida)\n" +
-                "2. Batareya (AKB) almashtirish: 40 000 so'mdan boshlab\n" +
-                "3. Zaryad uyasi (Gnezdo / Subplata): 40 000 – 80 000 so'm\n" +
-                "4. Plata ta'mirlash (Qisqa tutashuv / Tok oqishi): 100 000 so'mdan boshlab\n" +
-                "5. Mikrosxema almashtirish / BGA rebol (CPU, RAM, Xotira): 150 000 – 350 000 so'm\n" +
-                "6. Proshivka / Dasturiy nosozliklar / FRP: 40 000 – 100 000 so'm\n\n" +
-                "⚠️ Aniq narxlarni telefoningiz modeli va nosozlik holatiga qarab operatorlarimiz aytadi.\n\n" +
-                "📞 Aloqa: +998 97 910 90 07 | +998 97 599 44 49\n" +
-                "💬 Telegram: @TexnoZarFix\n" +
-                `📸 Instagram: ${instaUrl}`;
-  } else if (
-    userText.includes('ishonch') || 
-    userText.includes('kafolat') || 
-    userText.includes('garantiya') || 
-    userText.includes('aldam') || 
-    userText.includes('sifat') || 
-    userText.includes('tuzatib ber')
-  ) {
-    replyText = "🛡 TexnoZarFix ishonchliligi va kafolat haqida:\n\n" +
-                "✅ Rasmiy kafolat: Bajarilgan barcha turdagi mikrosxema, plata ta'mirlash va ehtiyot qismlarga 1 oydan 6 oygacha rasmiy kafolat beriladi.\n" +
-                "🔬 Professional uskunalar: Ta'mirlash ishlari yuqori aniqlikdagi mikroskoplar, professional lehimlash stansiyalari va original diagnostika apparatlarida bajariladi.\n" +
-                "📦 Original ehtiyot qismlar: Faqat sinovdan o'tgan, yuqori sifatli zavod detallari ishlatiladi.\n" +
-                "🔍 Ochiq diagnostika: Apparat tekshirilgach, nosozlik va uning aniq yechimi sizga to'liq tushuntiriladi, hech qanday yashirin to'lovlar olinmaydi.\n\n" +
-                "Savollaringiz bo'lsa, to'g'ridan-to‘g‘ri ustaga murojaat qilishingiz mumkin:\n" +
-                "📞 +998 97 910 90 07\n" +
-                "💬 @TexnoZarFix\n" +
-                `📸 Instagram: ${instaUrl}`;
-  } else if (userText.includes('instagram') || userText.includes('insta')) {
-    replyText = "📸 Bizning rasmiy Instagram sahifamiz:\n\n" +
-                `👉 ${instaUrl}\n\n` +
-                "Sahifamizda bajarilgan murakkab ta'mirlash jarayonlari, video-hisobotlar va yangiliklarni kuzatib borishingiz mumkin!";
-  } else if (userText.includes('manzil') || userText.includes('qayerda') || userText.includes('lokatsiya')) {
-    replyText = "📍 Bizning manzil: Urgut shahri, TexnoZarFix ustaxonasi.\n\nMo'ljal yoki to'liq joylashuvni bilish uchun operatorga yozing: @TexnoZarFix";
-  } else if (userText.includes('vaqt') || userText.includes('ish vaqti') || userText.includes('ochiq')) {
+  // 1. Asosiy buyruqlar va standart tugmalar
+  if (lowerText === '/start') {
+    replyText = "Assalomu alaykum! TexnoZarFix professional elektronika va smartfon ta'mirlash markazining aqlli botiga xush kelibsiz.\n\n" +
+                "Menyudagi tugmalardan foydalanishingiz yoki telefoningizdagi nosozlikni shunchaki yozib qoldirishingiz mumkin. Sun'iy intellekt yordamchimiz sizga darhol javob beradi!";
+  } else if (lowerText.includes('instagram') || lowerText.includes('insta')) {
+    replyText = `📸 Bizning rasmiy Instagram sahifamiz:\n\n👉 ${instaUrl}\n\nKuzatib boring, yangiliklar va jarayonlar shu yerda!`;
+  } else if (lowerText.includes('manzil') || lowerText.includes('qayerda') || lowerText.includes('lokatsiya')) {
+    replyText = "📍 Bizning manzil: Urgut shahri, TexnoZarFix ustaxonasi.\n\nMo'ljal yoki to'liq lokatsiya olish uchun operator bilan bog'laning: +998 97 910 90 07";
+  } else if (lowerText.includes('vaqt') || lowerText.includes('ish vaqti') || lowerText.includes('ochiq')) {
     replyText = "⏰ Ish vaqtimiz: Har kuni soat 09:00 dan 19:00 gacha (dam olish kunlarisiz).";
   } else if (
-    userText.includes('telefon') || 
-    userText.includes('aloqa') || 
-    userText.includes('nomer') || 
-    userText.includes('telegram') || 
-    userText.includes("bog'lanish")
+    lowerText.includes('telefon') || 
+    lowerText.includes('aloqa') || 
+    lowerText.includes('nomer') || 
+    lowerText.includes("bog'lanish")
   ) {
-    replyText = "📞 Aloqa uchun telefon raqamlarimiz:\n+998 97 910 90 07\n+998 97 599 44 49\n\n" +
-                "💬 Telegram: @TexnoZarFix\n" +
-                `📸 Instagram: ${instaUrl}`;
+    replyText = `📞 Aloqa uchun telefon raqamlarimiz:\n+998 97 910 90 07\n+998 97 599 44 49\n\n💬 Telegram: @TexnoZarFix\n📸 Instagram: ${instaUrl}`;
+  } else {
+    // 2. Erkin savollar va murojaatlar uchun Gemini AI ga so'rov yuborish
+    const systemPrompt = `Siz "TexnoZarFix" professional smartfon va elektronika ta'mirlash servis markazining rasmiy, aqlli virtual maslahatchisisiz.
+Ustaxona joylashuvi: Urgut shahri.
+Telefonlar: +998 97 910 90 07, +998 97 599 44 49.
+Telegram: @TexnoZarFix.
+Instagram: ${instaUrl}.
+
+Qoidalar:
+1. O'zbek tilida muloyim, aniq, lo'nda va professional usta ohangida javob bering.
+2. Telefon modellari, ekranni almashtirish, batareya, plata ta'mirlash, qisqa tutashuv (KЗ), BGA rebol (CPU, RAM, xotira), zaryad uyasi va proshivka bo'yicha texnik jihatdan to'g'ri maslahat bering.
+3. Boshlang'ich narxlar: Ekran almashtirish 50 000 so'mdan, Batareya 40 000 so'mdan, Plata/tutashuv 100 000 so'mdan, BGA/Mikrosxema 150 000 - 350 000 so'm atrofida. Aniq narx apparatni mikroskop ostida ko'rib diagnostika qilingach aytilishini eslatib o'ting.
+4. Javobingiz juda uzun cho'zilib ketmasin, 2-4 ta ixcham gapda mijozning savoliga aniq yechim bering va do'konga taklif qiling.`;
+
+    try {
+      const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: `${systemPrompt}\n\nMijoz savoli: "${userText}"` }
+              ]
+            }
+          ]
+        })
+      });
+
+      const aiData = await aiResponse.json();
+      if (aiData.candidates && aiData.candidates[0]?.content?.parts?.[0]?.text) {
+        replyText = aiData.candidates[0].content.parts[0].text.trim();
+      } else {
+        replyText = "Xabaringiz qabul qilindi. Tez orada usta siz bilan bog'lanadi. Shoshilinch bo'lsa: +998 97 910 90 07";
+      }
+    } catch (err) {
+      console.error("AI Error:", err);
+      replyText = "Xabaringiz qabul qilindi. Tez orada javob beramiz yoki qo'ng'iroq qilishingiz mumkin:\n📞 +998 97 910 90 07";
+    }
+
+    // Mijoz murojaatini shaxsiy profilingizga ham bildirishnoma qilib tashlaydi
+    const senderName = message.from?.first_name || 'Mijoz';
+    const senderUser = message.from?.username ? `@${message.from.username}` : "Username yo'q";
+    const alertToAdmin = `📩 Yangi mijoz murojaati!\n\n👤 Ismi: ${senderName}\n🔗 Profili: ${senderUser}\n💬 Xabari: "${userText}"`;
+
+    try {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: ADMIN_CHAT_ID,
+          text: alertToAdmin
+        })
+      });
+    } catch (e) {}
   }
 
+  // Mijozga javob yuborish
   try {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: 'POST',
