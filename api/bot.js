@@ -26,9 +26,9 @@ module.exports = async (req, res) => {
 
   const instaUrl = "https://www.instagram.com/texnozarfix?mdxt=N2Y1MGRyZjkzdDZs";
 
-  // 1. Asosiy tugmalar va buyruqlar
+  // Standart tugmalar
   if (lowerText === '/start') {
-    await sendTg(BOT_TOKEN, chatId, "Assalomu alaykum! TexnoZarFix ustaxonasining aqlli botiga xush kelibsiz.\n\nMenyudagi tugmalardan foydalanishingiz yoki telefoningizdagi muammoni shunchaki yozib qoldirishingiz mumkin. Sun'iy intellekt sizga darhol javob beradi!", keyboard);
+    await sendTg(BOT_TOKEN, chatId, "Assalomu alaykum! TexnoZarFix ustaxonasining aqlli botiga xush kelibsiz.\n\nSavolingizni yozib qoldiring, AI yordamchimiz sizga javob beradi!", keyboard);
     return res.status(200).send('OK');
   }
 
@@ -48,22 +48,19 @@ module.exports = async (req, res) => {
   }
 
   if (lowerText.includes('telefon') || lowerText.includes('aloqa') || lowerText.includes('nomer') || lowerText.includes("bog'lanish")) {
-    await sendTg(BOT_TOKEN, chatId, `📞 Aloqa uchun:\n+998 97 910 90 07\n+998 97 599 44 49\n\n💬 Telegram: @TexnoZarFix\n📸 Instagram: ${instaUrl}`, keyboard); return res.status(200).send('OK'); }  // 2. Birinchi navbatda xabarni sizga (Adminga) yetkazish const senderName = message.from?.first_name \vert{}\vert{} 'Mijoz'; const senderUser = message.from?.username ? `@${message.from.username}` : "Username yo'q";
-  const alertToAdmin = `📩 Yangi mijoz murojaati!\n\n👤 Ismi: ${senderName}\n🔗 Profili: ${senderUser}\n🆔 ID: ${chatId}\n\n💬 Xabari:\n"${userText}"`;
+    await sendTg(BOT_TOKEN, chatId, `📞 Aloqa uchun:\n+998 97 910 90 07\n+998 97 599 44 49\n\n💬 Telegram: @TexnoZarFix\n📸 Instagram: ${instaUrl}`, keyboard);
+    return res.status(200).send('OK');
+  }
 
+  // Adminga yangi xabar kelgani haqida bildirishnoma
+  const senderName = message.from?.first_name || 'Mijoz';
+  const senderUser = message.from?.username ? `@${message.from.username}` : "Username yo'q";
   try {
-    await sendTg(BOT_TOKEN, ADMIN_CHAT_ID, alertToAdmin);
-  } catch (err) {}
+    await sendTg(BOT_TOKEN, ADMIN_CHAT_ID, `📩 Yangi xabar!\nKimdan: ${senderName} (${senderUser})\nMatn: "${userText}"`);
+  } catch (e) {}
 
-  // 3. Gemini AI orqali mijozga mustaqil javob tayyorlash
+  // Gemini AI ga so'rov yuborish
   let replyText = "";
-  const systemInstruction = `Siz "TexnoZarFix" professional smartfon va elektronika ta'mirlash markazining aqlli maslahatchisisiz. Joylashuv: Urgut shahri. Aloqa: +998 97 910 90 07.
-Vazifangiz: Mijoz savoliga o'zbek tilida, muloyim va tajribali usta sifatida aniq javob berish.
-Qoidalar:
-- Telefon nosozligi (ekran, zaryad, batareya, qisqa tutashuv, plata, chip) sababini tushuntiring.
-- Boshlang'ich narxlar: Ekran 50 000 so'mdan, batareya 40 000 so'mdan, plata va tutashuvlar 100 000 so'mdan boshlanadi. Aniq narx mikroskop ostida diagnostika qilingach aytilishini bildiring.
-- Javob 2-3 ta ixcham gapdan iborat bo'lsin va ustaxonaga olib kelishni taklif qiling.`;
-
   try {
     const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -71,32 +68,29 @@ Qoidalar:
       body: JSON.stringify({
         contents: [
           {
-            parts: [{ text: `${systemInstruction}\n\nMijoz savoli: "${userText}"` }]
+            parts: [{ text: `Siz TexnoZarFix servis markazining professional ustasisiz (Urgut shahri). Telefon ta'mirlash, ekran, plata, batareya, BGA rebol bo'yicha qisqa, aniq o'zbekcha maslahat bering.\nMijoz savoli: "${userText}"` }]
           }
         ]
       })
     });
 
     const aiData = await aiResponse.json();
+
     if (aiData.candidates && aiData.candidates[0]?.content?.parts?.[0]?.text) {
       replyText = aiData.candidates[0].content.parts[0].text.trim();
+    } else if (aiData.error) {
+      // Agar Google xatolik bersa, xato matnini chiqaradi
+      replyText = `Google API Xatosi: ${aiData.error.message || JSON.stringify(aiData.error)}`;
     } else {
-      // Agar API xatolik qaytarsa, xatolik sababini tushunish uchun
-      console.error("Gemini Error Response:", JSON.stringify(aiData));
-      replyText = "Xabaringiz qabul qilindi. Tez orada usta siz bilan bog'lanadi.\n📞 +998 97 910 90 07";
+      replyText = `Javob bo'sh keldi: ${JSON.stringify(aiData)}`;
     }
   } catch (err) {
-    console.error("Fetch Error:", err);
-    replyText = "Xabaringiz qabul qilindi. Ustaxonamizga olib kelsangiz, bepul diagnostika qilib beramiz.\n📞 +998 97 910 90 07";
+    replyText = `Ulanishda xato: ${err.message}`;
   }
 
-  // 4. Mijozga AI javobini yuborish
   await sendTg(BOT_TOKEN, chatId, replyText, keyboard);
-
   return res.status(200).send('OK');
 };
 
 async function sendTg(token, chatId, text, keyboard = null) {
-  const body = { chat_id: chatId, text };
-  if (keyboard) body.reply_markup = keyboard;
-  return await fetch(`https
+  const body = { chat_id:
