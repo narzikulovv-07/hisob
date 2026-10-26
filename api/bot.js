@@ -28,17 +28,17 @@ module.exports = async (req, res) => {
 
   // Standart tugmalar
   if (lowerText === '/start') {
-    await sendTg(BOT_TOKEN, chatId, "Assalomu alaykum! TexnoZarFix ustaxonasining aqlli botiga xush kelibsiz.\n\nSavolingizni yozib qoldiring, AI yordamchimiz sizga javob beradi!", keyboard);
+    await sendTg(BOT_TOKEN, chatId, "Assalomu alaykum! TexnoZarFix ustaxonasining botiga xush kelibsiz.\n\nSavolingizni yozib qoldiring yoki pastdagi tugmalardan foydalaning:", keyboard);
     return res.status(200).send('OK');
   }
 
   if (lowerText.includes('instagram') || lowerText.includes('insta')) {
-    await sendTg(BOT_TOKEN, chatId, `📸 Bizning rasmiy Instagram sahifamiz:\n\n👉 ${instaUrl}`, keyboard);
+    await sendTg(BOT_TOKEN, chatId, `📸 Rasmiy Instagram sahifamiz:\n\n👉 ${instaUrl}`, keyboard);
     return res.status(200).send('OK');
   }
 
   if (lowerText.includes('manzil') || lowerText.includes('qayerda') || lowerText.includes('lokatsiya')) {
-    await sendTg(BOT_TOKEN, chatId, "📍 Manzilimiz: Urgut shahri, TexnoZarFix ustaxonasi.\n\nMo'ljal yoki to'liq lokatsiya olish uchun: +998 97 910 90 07", keyboard);
+    await sendTg(BOT_TOKEN, chatId, "📍 Manzilimiz: Urgut shahri, TexnoZarFix ustaxonasi.\n\nMo'ljal yoki aniq lokatsiya olish uchun: +998 97 910 90 07", keyboard);
     return res.status(200).send('OK');
   }
 
@@ -52,45 +52,54 @@ module.exports = async (req, res) => {
     return res.status(200).send('OK');
   }
 
-  // Adminga yangi xabar kelgani haqida bildirishnoma
+  // 1. Shaxsiy profilingizga bildirishnoma yuborish
   const senderName = message.from?.first_name || 'Mijoz';
   const senderUser = message.from?.username ? `@${message.from.username}` : "Username yo'q";
   try {
-    await sendTg(BOT_TOKEN, ADMIN_CHAT_ID, `📩 Yangi xabar!\nKimdan: ${senderName} (${senderUser})\nMatn: "${userText}"`);
+    await sendTg(BOT_TOKEN, ADMIN_CHAT_ID, `📩 Yangi xabar!\n👤 Ismi: ${senderName} (${senderUser})\n💬 Xabari: "${userText}"`);
   } catch (e) {}
 
-  // Gemini AI ga so'rov yuborish
+  // 2. Gemini AI ga so'rov yuborish (maksimal 5 soniya kutadi)
   let replyText = "";
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
         contents: [
           {
-            parts: [{ text: `Siz TexnoZarFix servis markazining professional ustasisiz (Urgut shahri). Telefon ta'mirlash, ekran, plata, batareya, BGA rebol bo'yicha qisqa, aniq o'zbekcha maslahat bering.\nMijoz savoli: "${userText}"` }]
+            parts: [{ text: `Siz TexnoZarFix ustaxonasining ustasisiz (Urgut shahri). Telefon ta'mirlash, ekran, plata, batareya, BGA rebol bo'yicha qisqa, aniq o'zbekcha javob bering. Savol: "${userText}"` }]
           }
         ]
       })
     });
+    clearTimeout(timeoutId);
 
     const aiData = await aiResponse.json();
-
     if (aiData.candidates && aiData.candidates[0]?.content?.parts?.[0]?.text) {
       replyText = aiData.candidates[0].content.parts[0].text.trim();
-    } else if (aiData.error) {
-      // Agar Google xatolik bersa, xato matnini chiqaradi
-      replyText = `Google API Xatosi: ${aiData.error.message || JSON.stringify(aiData.error)}`;
     } else {
-      replyText = `Javob bo'sh keldi: ${JSON.stringify(aiData)}`;
+      replyText = "Xabaringiz qabul qilindi. Tez orada usta sizga aloqaga chiqadi yoki qo'ng'iroq qiling: +998 97 910 90 07";
     }
   } catch (err) {
-    replyText = `Ulanishda xato: ${err.message}`;
+    replyText = "Xabaringiz qabul qilindi. Tez orada usta sizga aloqaga chiqadi yoki qo'ng'iroq qiling: +998 97 910 90 07";
   }
 
+  // 3. Mijozga darhol javob yuborish
   await sendTg(BOT_TOKEN, chatId, replyText, keyboard);
   return res.status(200).send('OK');
 };
 
 async function sendTg(token, chatId, text, keyboard = null) {
-  const body = { chat_id:
+  const body = { chat_id: chatId, text };
+  if (keyboard) body.reply_markup = keyboard;
+  return await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
