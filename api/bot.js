@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
     return res.status(200).send('OK');
   }
 
-  const BOT_TOKEN = '8959753899:AAHSvO2UDi8bCtTCnMPV1Gle_Y6zZa39DIA';
+  const BOT_TOKEN = '8959753899:AAHL9I9Q8vu0WGjkm-E82KRIU_i96m811lY';
   const GEMINI_API_KEY = 'AQ.Ab8RN6Kh2xZ84QVifQ127S5Dy0Nu4q7QW6PzEVu0-aondUnkXA';
   const ADMIN_CHAT_ID = '1551435907';
 
@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
 
   // Standart tugmalar
   if (lowerText === '/start') {
-    await sendTg(BOT_TOKEN, chatId, "Assalomu alaykum! TexnoZarFix professional ustaxonasining aqlli botiga xush kelibsiz.\n\nTelefoningizdagi muammoni yozing yoki pastdagi tugmalardan foydalaning:", keyboard);
+    await sendTg(BOT_TOKEN, chatId, "Assalomu alaykum! TexnoZarFix ustaxonasining aqlli botiga xush kelibsiz.\n\nTelefoningizdagi muammoni yozing yoki menyudan foydalaning:", keyboard);
     return res.status(200).send('OK');
   }
 
@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
   }
 
   if (lowerText.includes('manzil') || lowerText.includes('qayerda') || lowerText.includes('lokatsiya')) {
-    await sendTg(BOT_TOKEN, chatId, "📍 Manzil: Urgut shahri, TexnoZarFix ustaxonasi.\n📞 Telefon: +998 97 910 90 07", keyboard);
+    await sendTg(BOT_TOKEN, chatId, "📍 Manzil: Urgut shahri, TexnoZarFix ustaxonasi.\n📞 Aloqa: +998 97 910 90 07", keyboard);
     return res.status(200).send('OK');
   }
 
@@ -62,7 +62,7 @@ module.exports = async (req, res) => {
       body: JSON.stringify({
         contents: [
           {
-            parts: [{ text: `Siz Urgut shahridagi "TexnoZarFix" telefon ta'mirlash servisining professional ustasisiz. Telefon ta'mirlash, ekran, plata, batareya, BGA bo'yicha qisqa (2 gapda), usta tilida o'zbekcha aniq maslahat bering. Mijoz savoli: "${userText}"` }]
+            parts: [{ text: `Siz Urgut shahridagi "TexnoZarFix" telefon ta'mirlash servisining professional ustasisiz. Telefon ta'mirlash, ekran, plata, batareya, BGA bo'yicha qisqa (2-3 gapda), usta tilida o'zbekcha aniq maslahat bering. Mijoz savoli: "${userText}"` }]
           }
         ]
       })
@@ -79,10 +79,10 @@ module.exports = async (req, res) => {
     replyText = "Xabaringiz qabul qilindi. Tez orada usta siz bilan bog'lanadi.\n📞 +998 97 910 90 07";
   }
 
-  // Mijozga javob yuborish
+  // Mijozga javob qaytarish
   await sendTg(BOT_TOKEN, chatId, replyText, keyboard);
 
-  // Sizga (adminga) xabarnoma yuborish
+  // Adminga xabar yuborish
   try {
     const senderName = message.from?.first_name || 'Mijoz';
     const senderUser = message.from?.username ? `@${message.from.username}` : "Username yo'q";
